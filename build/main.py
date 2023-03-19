@@ -25,18 +25,29 @@ def schematicsClient():
     schClient.set_service_url(schematicsURL)
     return schClient
 
+def pullAllOutputs():
+    client = schematicsClient()
+    wsOutputs = client.get_workspace_outputs(
+        w_id=workspaceId,
+    ).get_result()
+
+    outputs = wsOutputs[0]['output_values']
+
+    return outputs
+
 def pullInstanceId():
     client = schematicsClient()
     wsOutputs = client.get_workspace_outputs(
         w_id=workspaceId,
     ).get_result()
 
-    outputs = wsOutputs[0]['output_values'][0]['instance_id']
+    instanceIdOutput = wsOutputs[0]['output_values'][0]['instance_id']
 
-    return outputs
+    return instanceIdOutput
 
 try:
     pullInstanceIdOutput = pullInstanceId()
+    print("Var type is: " + str(type(pullInstanceIdOutput)))
     print(pullInstanceIdOutput)
 except ApiException as ae:
     print("Pull of outputs failed.")
