@@ -6,11 +6,11 @@ import time
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import logging
 from logdna import LogDNAHandler
 
-load_dotenv()
+# load_dotenv()
 # Set up IAM authenticator and pull refresh token
 authenticator = IAMAuthenticator(
     apikey=os.environ.get('IBMCLOUD_API_KEY'),
@@ -21,6 +21,9 @@ authenticator = IAMAuthenticator(
 refreshToken = authenticator.token_manager.request_token()['refresh_token']
 
 workspaceId = os.environ.get('WORKSPACE_ID')
+
+cosApiKey = os.environ.get('COS_API_KEY')
+
 # Set up Schematics service client and declare workspace ID
 
 def logDnaLogger():
@@ -131,7 +134,7 @@ def pullInstanceId():
 
 try:
     log = logDnaLogger()
-    print("Action 1: Pull current output for instance_id and write to etcd cancellation queue.")
+    print("Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
     pullInstanceIdOutput = pullInstanceId()
     print("Current instance ID is: " + str(pullInstanceIdOutput))
     print("Action 2: Call workspace destroy command to remove resources.")
