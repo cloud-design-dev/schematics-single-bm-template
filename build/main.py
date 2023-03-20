@@ -6,11 +6,11 @@ import time
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
-# from dotenv import load_dotenv
 import logging
 from logdna import LogDNAHandler
+import ibm_boto3
+from ibm_botocore.client import Config, ClientError
 
-# load_dotenv()
 # Set up IAM authenticator and pull refresh token
 authenticator = IAMAuthenticator(
     apikey=os.environ.get('IBMCLOUD_API_KEY'),
@@ -22,7 +22,7 @@ refreshToken = authenticator.token_manager.request_token()['refresh_token']
 
 workspaceId = os.environ.get('WORKSPACE_ID')
 
-cosApiKey = os.environ.get('COS_API_KEY')
+
 
 # Set up Schematics service client and declare workspace ID
 
@@ -132,11 +132,35 @@ def pullInstanceId():
 
     return instanceIdOutput
 
+def cosClient():
+    # Constants for IBM COS values
+    cosEndpoint = ("https://" + os.environ.get('COS_ENDPOINT'))
+    cosApiKey = os.environ.get('COS_API_KEY')
+    cosInstanceCrn    = os.environ.get('COS_INSTANCE_CRN')
+    cos = ibm_boto3.resource("s3",
+        ibm_api_key_id=cosApiKey,
+        ibm_service_instance_id=cosInstanceCrn,
+        config=Config(signature_version="oauth"),
+        endpoint_url=cosEndpoint
+    )
+    return cos
+
+def writeCosFile(instance, cosFile):
+    client = cosClient()
+    cosBucket = os.environ.get('COS_BUCKET')
+    cosFile = cosFile
+    cosFileContents = instance
+
+    client.Object(cosBucket, cosFile).put(Body=cosFileContents)
+
+
 try:
     log = logDnaLogger()
     print("Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
     pullInstanceIdOutput = pullInstanceId()
     print("Current instance ID is: " + str(pullInstanceIdOutput))
+    print("writing to COS bucket")
+    writeCosFile(instance=pullInstanceIdOutput, cosFile='cancel-queue/' + instance + '-cancel.txt')
     print("Action 2: Call workspace destroy command to remove resources.")
     deleteWorkspaceResources()
     print("Action 3: Run workspace plan to deploy new resources")
@@ -146,6 +170,8 @@ try:
     print("Action 5: Pull new server output and write to current servers queue")
     newInstanceIdOutput = pullInstanceId()
     print("New instance ID is: " + str(newInstanceIdOutput))
+    print("writing to COS bucket")
+    writeCosFile(instance=pullInstanceIdOutput, cosFile='current-servers' + instance + '.txt')
 except ApiException as ae:
     log.error("Pull of outputs failed.")
     log.error(" - status code: " + str(ae.code))

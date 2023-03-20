@@ -89,7 +89,7 @@ def getWsOutput():
 def writeCosFile(instance):
     client = cosClient()
     cosBucket = os.environ.get('COS_BUCKET')
-    cosFile = os.environ.get('WORKSPACE_ID') + "-cancel.txt"
+    cosFile = 'cancel-queue/' + os.environ.get('WORKSPACE_ID') + '-cancel.txt'
     cosFileContents = instance
 
     client.Object(cosBucket, cosFile).put(Body=cosFileContents)
@@ -122,6 +122,7 @@ try:
     writeCosFile(instance=getInstanceId)
     getItem = get_item()
     print(getItem)
+    listBucketContents()
 except Exception as e:
     logging.error(e)
 
