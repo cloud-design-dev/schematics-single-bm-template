@@ -131,7 +131,7 @@ def pullInstanceId():
 
 try:
     log = logDnaLogger()
-    print("Action 1: Pull current output for instance_id and write to etcd cancellation queue")
+    print("Action 1: Pull current output for instance_id and write to etcd cancellation queue.")
     pullInstanceIdOutput = pullInstanceId()
     print("Current instance ID is: " + str(pullInstanceIdOutput))
     print("Action 2: Call workspace destroy command to remove resources.")
