@@ -10,15 +10,15 @@ variable "deployment" {
   }))
   default = {
     windows = {
-      os_reference_code   = "WIN_2022-STD_64"
+      os_reference_code   = "OS_WINDOWS_2022_FULL_STD_64_BIT"
       name                = "windows"
       datacenter          = "dal10"
       public_vlan_number  = 2998166
       private_vlan_number = 2998168
-      user_metadata       = "user-data/windows.ps1"
+      user_metadata       = null
     },
     centos = {
-      os_reference_code   = "ROCKYLINUX_8_64"
+      os_reference_code   = "OS_CENTOS_STREAM_8_X_64_BIT"
       name                = "centos"
       datacenter          = "wdc06"
       public_vlan_number  = 3313878
@@ -26,7 +26,7 @@ variable "deployment" {
       user_metadata       = "user-data/centos.yml"
     },
     ubuntu = {
-      os_reference_code   = "UBUNTU_20_64"
+      os_reference_code   = "OS_UBUNTU_22_04_LTS_JAMMY_JELLYFISH_64_BIT"
       name                = "ubuntu"
       datacenter          = "lon06"
       public_vlan_number  = 3309424
@@ -41,14 +41,26 @@ variable "os" {
   type        = string
 }
 
-variable "instance_profile" {
-  description = "Instance profile to use."
+variable "package_key_name" {
+  description = "BM Package keyname to use."
   type        = string
-  default     = "BL2_2X8X100"
+  default     = "DUAL_INTEL_XEON_PROCESSOR_SCALABLE_FAMILY_4_DRIVES"
 }
 
 variable "domain" {
   description = "Domain for deployed server."
   type        = string
   default     = "gh40.net"
+}
+
+variable "process_key_name" {
+  description = "BM Process keyname to use."
+  type        = string
+  default     = "INTEL_INTEL_XEON_5120_2_20"
+}
+
+variable "network_speed" {
+  description = "Default Network speed for BM hosts."
+  type        = number
+  default     = 10000
 }
