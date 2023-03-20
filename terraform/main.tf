@@ -1,6 +1,6 @@
 locals {
   date   = formatdate("MM-DD", timestamp())
-  prefix = "cde-${local.date}-${var.deployment["${var.os}"]["name"]}"
+  prefix = "${var.deployment["${var.os}"]["name"]}-${local.date}"
 
   tags = [
     "project:rolling-iaas",

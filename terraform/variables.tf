@@ -11,7 +11,7 @@ variable "deployment" {
   default = {
     windows = {
       os_reference_code   = "OS_WINDOWS_2022_FULL_STD_64_BIT"
-      name                = "windows"
+      name                = "win"
       datacenter          = "dal10"
       public_vlan_number  = 2998166
       private_vlan_number = 2998168
