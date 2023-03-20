@@ -1,5 +1,5 @@
 locals {
-  date   = formatdate("MM-DD-YY", timestamp())
+  date   = formatdate("MM-DD", timestamp())
   prefix = "cde-${local.date}-${var.deployment["${var.os}"]["name"]}"
 
   tags = [

@@ -20,7 +20,6 @@ authenticator = IAMAuthenticator(
 
 refreshToken = authenticator.token_manager.request_token()['refresh_token']
 
-osOption = os.environ.get('OS_OPTION')
 workspaceId = os.environ.get('WORKSPACE_ID')
 # Set up Schematics service client and declare workspace ID
 
@@ -46,6 +45,15 @@ def schematicsClient():
     schClient.set_service_url(schematicsURL)
     return schClient
 
+def getWorkspaceStatus():
+    client = schematicsClient()
+    wsStatus = client.get_workspace(
+        w_id=workspaceId,
+    ).get_result()
+
+    status = wsStatus['status']
+    return status
+
 def deleteWorkspaceResources():
     client = schematicsClient()
     log = logDnaLogger()
@@ -70,14 +78,9 @@ def deleteWorkspaceResources():
 def planWorkspace():
     client = schematicsClient()
     log = logDnaLogger()
-    action_options_template_model =  {
-            'tf_vars': 'os=' + osOption
-    }
-
     wsPlan = client.plan_workspace_command(
         w_id=workspaceId,
-        refresh_token=refreshToken,
-        action_options=[action_options_template_model]
+        refresh_token=refreshToken
     ).get_result()
 
     planActivityId = wsPlan.get('activityid')
@@ -116,17 +119,6 @@ def applyWorkspace():
             log.info("Workspace apply complete. Gathering workspace outputs.")
             break
 
-
-def pullAllOutputs():
-    client = schematicsClient()
-    wsOutputs = client.get_workspace_outputs(
-        w_id=workspaceId,
-    ).get_result()
-
-    outputs = wsOutputs[0]['output_values']
-
-    return outputs
-
 def pullInstanceId():
     client = schematicsClient()
     wsOutputs = client.get_workspace_outputs(
@@ -139,18 +131,20 @@ def pullInstanceId():
 
 try:
     log = logDnaLogger()
+    # getWsStatus = getWorkspaceStatus()
+    # print("Current workspace status is: " + str(getWsStatus))
     # log.info("Action 1: Pull current output for instance_id and write to etcd cancellation queue")
     # pullInstanceIdOutput = pullInstanceId()
     # log.info("Current instance ID is: " + str(pullInstanceIdOutput))
     # log.info("Action 2: Call workspace destroy command to remove resources.")
-    # wsDestroy = deleteWorkspaceResources()
-    log.info("Action 3: Run workspace plan to see if OS change is picked up")
-    planWorkspace()
-    log.info("Action 4: Run workspace apply to recreate resources")
-    wsApply = applyWorkspace()
-    log.info("Action 5: Pull new server output and write to current servers queue")
-    newInstanceIdOutput = pullInstanceId()
-    log.info("New instance ID is: " + str(newInstanceIdOutput))
+    # # wsDestroy = deleteWorkspaceResources()
+    # log.info("Action 3: Run workspace plan to see if OS change is picked up")
+    # planWorkspace()
+    # log.info("Action 4: Run workspace apply to recreate resources")
+    # wsApply = applyWorkspace()
+    # log.info("Action 5: Pull new server output and write to current servers queue")
+    # newInstanceIdOutput = pullInstanceId()
+    # log.info("New instance ID is: " + str(newInstanceIdOutput))
 except ApiException as ae:
     log.error("Pull of outputs failed.")
     log.error(" - status code: " + str(ae.code))
