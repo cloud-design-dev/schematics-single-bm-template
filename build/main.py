@@ -22,10 +22,6 @@ refreshToken = authenticator.token_manager.request_token()['refresh_token']
 
 workspaceId = os.environ.get('WORKSPACE_ID')
 
-
-
-# Set up Schematics service client and declare workspace ID
-
 def logDnaLogger():
     key = os.environ.get('LOGDNA_INGESTION_KEY')
     log = logging.getLogger('logdna')
@@ -156,22 +152,30 @@ def writeCosFile(instance, cosFile):
 
 try:
     log = logDnaLogger()
-    print("Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
+    currentStatus = getWorkspaceStatus()
+    if (currentStatus == 'INACTIVE'):
+        print("Workspace is INACTIVE state, no resources need to be destroyed.")
+        print("Running plan to deploy new resources.")
+        planWorkspace()
+        print("Workspace plan complete. Running apply to deploy new resources.")
+        applyWorkspace()
+        print("Workspace apply complete. New resources deployed.")
+    else:
+        print("Workspace is in ACTIVE state, running destroy command to remove resources.")
+        deleteWorkspaceResources()
+        print("Workspace cancelled. Running plan to deploy new resources.")
+        planWorkspace()
+        print("Workspace plan complete. Running apply to deploy new resources.")
+        applyWorkspace()
+        print("Workspace apply complete. New resources deployed.")
+    # log = logDnaLogger()
+    print("Post Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
     pullInstanceIdOutput = pullInstanceId()
     print("Current instance ID is: " + str(pullInstanceIdOutput))
     print("writing to COS bucket")
     writeCosFile(instance=pullInstanceIdOutput, cosFile='cancel-queue/' + instance + '-cancel.txt')
-    print("Action 2: Call workspace destroy command to remove resources.")
-    deleteWorkspaceResources()
-    print("Action 3: Run workspace plan to deploy new resources")
-    wsPlanWorkspace()
-    print("Action 4: Run workspace apply to recreate resources")
-    applyWorkspace()
-    print("Action 5: Pull new server output and write to current servers queue")
-    newInstanceIdOutput = pullInstanceId()
-    print("New instance ID is: " + str(newInstanceIdOutput))
-    print("writing to COS bucket")
-    writeCosFile(instance=pullInstanceIdOutput, cosFile='current-servers' + instance + '.txt')
+    print("File written to COS bucket.")
+
 except ApiException as ae:
     log.error("Pull of outputs failed.")
     log.error(" - status code: " + str(ae.code))
