@@ -6,8 +6,6 @@ import time
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
-import logging
-from logdna import LogDNAHandler
 import ibm_boto3
 from ibm_botocore.client import Config, ClientError
 
@@ -22,21 +20,21 @@ refreshToken = authenticator.token_manager.request_token()['refresh_token']
 
 workspaceId = os.environ.get('WORKSPACE_ID')
 
-def logDnaLogger():
-    key = os.environ.get('LOGDNA_INGESTION_KEY')
-    log = logging.getLogger('logdna')
-    log.setLevel(logging.INFO)
+# def logDnaLogger():
+#     key = os.environ.get('LOGDNA_INGESTION_KEY')
+#     log = logging.getLogger('logdna')
+#     log.setLevel(logging.INFO)
 
-    options = {
-        'app': 'rolling-iaas',
-        'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
-    }
+#     options = {
+#         'app': 'rolling-iaas',
+#         'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
+#     }
 
-    logger = LogDNAHandler(key, options)
+#     logger = LogDNAHandler(key, options)
 
-    log.addHandler(logger)
+#     log.addHandler(logger)
 
-    return log
+#     return log
 
 def schematicsClient():
     schClient = SchematicsV1(authenticator=authenticator)
@@ -55,7 +53,6 @@ def getWorkspaceStatus():
 
 def deleteWorkspaceResources():
     client = schematicsClient()
-    log = logDnaLogger()
     wsDestroy = client.destroy_workspace_command(
     w_id=workspaceId,
     refresh_token=refreshToken
@@ -65,13 +62,13 @@ def deleteWorkspaceResources():
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if (destroyStatus == 'job_in_progress' or destroyStatus == 'job_pending'):
-            log.info("Workspace destroy in progress. Checking again in 2 minutes...")
+            print("Workspace destroy in progress. Checking again in 2 minutes...")
             time.sleep(120)
         elif (destroyStatus == 'job_cancelled' or destroyStatus == 'job_failed'):
-            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
+            print("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            print("Workspace apply complete. Gathering workspace outputs.")
             break
 
 def planWorkspace():
@@ -87,13 +84,13 @@ def planWorkspace():
     while True:
         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
         if (planStatus == 'job_in_progress' or planStatus == 'job_pending'):
-            log.info("Workspace apply in progress. Checking again in 2 minutes...")
+            print("Workspace apply in progress. Checking again in 2 minutes...")
             time.sleep(120)
         elif (planStatus == 'job_cancelled' or planStatus == 'job_failed'):
-            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
+            print("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            print("Workspace apply complete. Gathering workspace outputs.")
             break
 
 def applyWorkspace():
@@ -109,13 +106,13 @@ def applyWorkspace():
     while True:
         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if (applyStatus == 'job_in_progress' or applyStatus == 'job_pending'):
-            log.info("Workspace apply in progress. Checking again in 2 minutes...")
+            print("Workspace apply in progress. Checking again in 2 minutes...")
             time.sleep(120)
         elif (applyStatus == 'job_cancelled' or applyStatus == 'job_failed'):
-            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
+            print("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            print("Workspace apply complete. Gathering workspace outputs.")
             break
 
 def pullInstanceId():
@@ -151,34 +148,33 @@ def writeCosFile(instance, cosFile):
 
 
 try:
-    log = logDnaLogger()
     currentStatus = getWorkspaceStatus()
     if (currentStatus == 'INACTIVE'):
         print("Workspace is INACTIVE state, no resources need to be destroyed.")
         print("Running plan to deploy new resources.")
-        planWorkspace()
+        print("I would run planWorkspace() here")
         print("Workspace plan complete. Running apply to deploy new resources.")
-        applyWorkspace()
+        print("I would run applyWorkspace() here")
         print("Workspace apply complete. New resources deployed.")
     else:
         print("Workspace is in ACTIVE state, running destroy command to remove resources.")
-        deleteWorkspaceResources()
+        print("I would run deleteWorkspaceResources() here")
         print("Workspace cancelled. Running plan to deploy new resources.")
-        planWorkspace()
+        print("I would run planWorkspace() here")
         print("Workspace plan complete. Running apply to deploy new resources.")
-        applyWorkspace()
+        print("I would run applyWorkspace() here")
         print("Workspace apply complete. New resources deployed.")
-    # log = logDnaLogger()
-    print("Post Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
-    pullInstanceIdOutput = pullInstanceId()
-    print("Current instance ID is: " + str(pullInstanceIdOutput))
-    print("writing to COS bucket")
-    writeCosFile(instance=pullInstanceIdOutput, cosFile='cancel-queue/' + instance + '-cancel.txt')
-    print("File written to COS bucket.")
+
+    # print("Post Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
+    # pullInstanceIdOutput = pullInstanceId()
+    # print("Current instance ID is: " + str(pullInstanceIdOutput))
+    # print("writing to COS bucket")
+    # writeCosFile(instance=pullInstanceIdOutput, cosFile='cancel-queue/' + instance + '-cancel.txt')
+    # print("File written to COS bucket.")
 
 except ApiException as ae:
-    log.error("Pull of outputs failed.")
-    log.error(" - status code: " + str(ae.code))
-    log.error(" - error message: " + ae.message)
+    print("Pull of outputs failed.")
+    print(" - status code: " + str(ae.code))
+    print(" - error message: " + ae.message)
     if ("reason" in ae.http_response.json()):
-        log.error(" - reason: " + ae.http_response.json()["reason"])
+        print(" - reason: " + ae.http_response.json()["reason"])

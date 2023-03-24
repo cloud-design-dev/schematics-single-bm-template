@@ -6,13 +6,10 @@ import time
 from ibm_schematics.schematics_v1 import SchematicsV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
-import logging
-from logdna import LogDNAHandler
+
 import ibm_boto3
 from ibm_botocore.client import Config, ClientError
-from dotenv import load_dotenv
 
-load_dotenv()
 authenticator = IAMAuthenticator(
     apikey=os.environ.get('IBMCLOUD_API_KEY'),
     client_id='bx',
@@ -48,21 +45,21 @@ def cosClient():
 
     return cos
 
-def logDnaLogger():
-    key = os.environ.get('LOGDNA_INGESTION_KEY')
-    log = logging.getLogger('logdna')
-    log.setLevel(logging.INFO)
+# def logDnaLogger():
+#     key = os.environ.get('LOGDNA_INGESTION_KEY')
+#     log = logging.getLogger('logdna')
+#     log.setLevel(logging.INFO)
 
-    options = {
-        'app': 'rolling-iaas',
-        'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
-    }
+#     options = {
+#         'app': 'rolling-iaas',
+#         'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
+#     }
 
-    logger = LogDNAHandler(key, options)
+#     logger = LogDNAHandler(key, options)
 
-    log.addHandler(logger)
+#     log.addHandler(logger)
 
-    return log
+#     return log
 
 def cosPullBuckets():
     client = cosClient()
