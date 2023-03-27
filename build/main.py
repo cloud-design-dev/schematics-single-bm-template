@@ -125,45 +125,48 @@ def pullInstanceId():
 
     return instanceIdOutput
 
-def cosClient():
-    # Constants for IBM COS values
-    cosEndpoint = ("https://" + os.environ.get('COS_ENDPOINT'))
-    cosApiKey = os.environ.get('COS_API_KEY')
-    cosInstanceCrn    = os.environ.get('COS_INSTANCE_CRN')
-    cos = ibm_boto3.resource("s3",
-        ibm_api_key_id=cosApiKey,
-        ibm_service_instance_id=cosInstanceCrn,
-        config=Config(signature_version="oauth"),
-        endpoint_url=cosEndpoint
-    )
-    return cos
+# def cosClient():
+#     # Constants for IBM COS values
+#     cosEndpoint = ("https://" + os.environ.get('COS_ENDPOINT'))
+#     cosApiKey = os.environ.get('COS_API_KEY')
+#     cosInstanceCrn    = os.environ.get('COS_INSTANCE_CRN')
+#     cos = ibm_boto3.resource("s3",
+#         ibm_api_key_id=cosApiKey,
+#         ibm_service_instance_id=cosInstanceCrn,
+#         config=Config(signature_version="oauth"),
+#         endpoint_url=cosEndpoint
+#     )
+#     return cos
 
-def writeCosFile(instance, cosFile):
-    client = cosClient()
-    cosBucket = os.environ.get('COS_BUCKET')
-    cosFile = cosFile
-    cosFileContents = instance
+# def writeCosFile(instance, cosFile):
+#     client = cosClient()
+#     cosBucket = os.environ.get('COS_BUCKET')
+#     cosFile = cosFile
+#     cosFileContents = instance
 
-    client.Object(cosBucket, cosFile).put(Body=cosFileContents)
+#     client.Object(cosBucket, cosFile).put(Body=cosFileContents)
 
 
 try:
     currentStatus = getWorkspaceStatus()
-    if (currentStatus == 'INACTIVE'):
-        print("Workspace is INACTIVE state, no resources need to be destroyed.")
-        print("Running plan to deploy new resources.")
-        print("I would run planWorkspace() here")
-        print("Workspace plan complete. Running apply to deploy new resources.")
-        print("I would run applyWorkspace() here")
-        print("Workspace apply complete. New resources deployed.")
-    else:
-        print("Workspace is in ACTIVE state, running destroy command to remove resources.")
-        print("I would run deleteWorkspaceResources() here")
-        print("Workspace cancelled. Running plan to deploy new resources.")
-        print("I would run planWorkspace() here")
-        print("Workspace plan complete. Running apply to deploy new resources.")
-        print("I would run applyWorkspace() here")
-        print("Workspace apply complete. New resources deployed.")
+    print("Current workspace status: " + currentStatus)
+    planWorkspace()
+    applyWorkspace()
+    # if (currentStatus == 'INACTIVE'):
+    #     print("Workspace is INACTIVE state, no resources need to be destroyed.")
+    #     print("Running plan to deploy new resources.")
+    #     print("I would run planWorkspace() here")
+    #     print("Workspace plan complete. Running apply to deploy new resources.")
+    #     print("I would run applyWorkspace() here")
+    #     print("Workspace apply complete. New resources deployed.")
+    # else:
+    #     print("Workspace is in ACTIVE state, running destroy command to remove resources.")
+    #     print("I would run deleteWorkspaceResources() here")
+    #     print("Workspace cancelled. Running plan to deploy new resources.")
+    #     print("I would run planWorkspace() here")
+    #     print("Workspace plan complete. Running apply to deploy new resources.")
+    #     print("I would run applyWorkspace() here")
+    #     print("Workspace apply complete. New resources deployed.")
 
     # print("Post Action 1: Pull current output for instance_id and write to COS cancellation bucket [future state].")
     # pullInstanceIdOutput = pullInstanceId()
