@@ -73,7 +73,7 @@ def deleteWorkspaceResources():
 
 def planWorkspace():
     client = schematicsClient()
-    log = logDnaLogger()
+    # log = logDnaLogger()
     wsPlan = client.plan_workspace_command(
         w_id=workspaceId,
         refresh_token=refreshToken
@@ -95,7 +95,7 @@ def planWorkspace():
 
 def applyWorkspace():
     client = schematicsClient()
-    log = logDnaLogger()
+    # log = logDnaLogger()
     wsApply = client.apply_workspace_command(
         w_id=workspaceId,
         refresh_token=refreshToken,
