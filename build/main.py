@@ -1,5 +1,3 @@
-import sys
-import json
 import os
 import logging
 from logdna import LogDNAHandler
@@ -7,8 +5,7 @@ import time
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
-import ibm_boto3
-from ibm_botocore.client import Config, ClientError
+from datetime import datetime
 
 # Set up IAM authenticator and pull refresh token
 authenticator = IAMAuthenticator(
@@ -25,13 +22,12 @@ def logDnaLogger():
     key = os.environ.get('LOGDNA_INGESTION_KEY')
     log = logging.getLogger('logdna')
     log.setLevel(logging.INFO)
-    appName = workspaceId + '-ce-job'
 
     options = {
         'env': 'code-engine',
-        'level': 'info',
-        'app': appName,
-        'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
+        'index_meta': True,
+        'tags': str(workspaceId + '-ce-job'),
+        'url': 'https://logs.private.us-south.logging.cloud.ibm.com/logs/ingest',
         'log_error_response': True
     }
 
@@ -43,7 +39,7 @@ def logDnaLogger():
 
 def schematicsClient():
     schClient = SchematicsV1(authenticator=authenticator)
-    schematicsURL = "https://us.schematics.cloud.ibm.com"
+    schematicsURL = 'https://private-us-east.schematics.cloud.ibm.com'
     schClient.set_service_url(schematicsURL)
     return schClient
 
@@ -125,13 +121,17 @@ def applyWorkspace():
             break
 
 try:
+    log = logDnaLogger()
+    deployTimestamp = datetime.now().strftime("%Y-%m-%d:%H:%M:%S")
+    log.debug("Starting Code Engine job at " + deployTimestamp)
     currentStatus = getWorkspaceStatus()
-    print("Current workspace status: " + currentStatus)
+    log.debug("Current workspace status: " + currentStatus)
+    deleteWorkspaceResources()
     planWorkspace()
     applyWorkspace()
 except ApiException as ae:
-    print("Workspace operation failed.")
-    print(" - status code: " + str(ae.code))
-    print(" - error message: " + ae.message)
+    log.error("Workspace operation failed.")
+    log.error(" - status code: " + str(ae.code))
+    log.error(" - error message: " + ae.message)
     if ("reason" in ae.http_response.json()):
-        print(" - reason: " + ae.http_response.json()["reason"])
+        log.error(" - reason: " + ae.http_response.json()["reason"])
