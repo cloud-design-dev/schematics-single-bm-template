@@ -61,7 +61,7 @@ def deleteWorkspaceResources():
     ).get_result()
     
     destroyActivityId = wsDestroy.get('activityid')
-    # Next steo is to check the status of the workspace vs the status of the job that is running the destroy command
+    # Next step is to check the status of the workspace vs the status of the job that is running the destroy command
     # status = getWorkspaceStatus()
     # Need to verify the status names that get returned from the API. I believe these all use UPPERCASE
     while True:
@@ -73,7 +73,7 @@ def deleteWorkspaceResources():
             log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            log.info("Workspace resources successfully destroyed. Starting workspace plan.")
             break
 
 def planWorkspace():
@@ -95,7 +95,7 @@ def planWorkspace():
             log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            log.info("Workspace Plan complete. Starting workspace apply.")
             break
 
 def applyWorkspace():
@@ -111,13 +111,13 @@ def applyWorkspace():
     while True:
         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if (applyStatus == 'job_in_progress' or applyStatus == 'job_pending'):
-            log.info("Workspace apply in progress. Checking again in 2 minutes...")
-            time.sleep(120)
+            log.info("Workspace apply in progress. Checking again in 10 minutes...")
+            time.sleep(600)
         elif (applyStatus == 'job_cancelled' or applyStatus == 'job_failed'):
             log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
             break
         else:
-            log.info("Workspace apply complete. Gathering workspace outputs.")
+            log.info("Workspace apply complete. Visit the following URL to see the deployed resources: https://cloud.ibm.com/schematics/workspaces/" + workspaceId + "/resources?region=us")
             break
 
 try:

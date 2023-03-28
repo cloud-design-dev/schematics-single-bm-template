@@ -39,7 +39,7 @@ def getServiceInstances():
         fields=["*"]
     ).get_result()
     resources = result['items']
-    print(str(len(resources)) + " bare metal instances match your search:")
+##    print(str(len(resources)) + " bare metal instances match your search:")
     for resource in resources:
         print(resource['doc']['id'])
 
