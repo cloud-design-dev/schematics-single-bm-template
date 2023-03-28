@@ -128,19 +128,18 @@ try:
     if (workspaceStatus == 'ACTIVE'): 
         log.info("Workspace is active. Starting destroy.")
         deleteWorkspaceResources()
+        log.info("Workspace resource destroy completed. Starting plan.")
         planWorkspace()
+        log.info("Workspace plan completed. Starting apply.")
         applyWorkspace()
-    elif (workspaceStatus == 'INACTIVE'):
+        log.info("Workspace apply completed.")
+    else:
         log.info("Workspace is inactive. Starting plan.")
         planWorkspace()
+        log.info("Workspace plan completed. Starting apply.")
         applyWorkspace()
-    else:
-        log.error("Workspace is in an unknown state. Please check the workspace status and try again.")
-    # currentStatus = getWorkspaceStatus()
-    # log.debug("Current workspace status: " + currentStatus)
-    # deleteWorkspaceResources()
-    # planWorkspace()
-    # applyWorkspace()
+        log.info("Workspace apply completed.")
+
 except ApiException as ae:
     log.error("Workspace operation failed.")
     log.error(" - status code: " + str(ae.code))
