@@ -22,15 +22,11 @@ ce-build-run:
 	
 	ibmcloud ce buildrun submit --name ${BUILD_NAME}-run-$$(date +%Y%m%d%H%M) --build ${BUILD_NAME}
 	
-	ibmcloud ce buildrun logs -f -n ${BUILD_NAME}-run-$$(date +%Y%m%d%H%M)
-
 ce-submit-job:
 
 	echo "Submitting job run to Code Engine"
 	
 	ibmcloud ce jobrun submit --name jobrun-$$(date +%Y%m%d%H%M)  --job ${JOB_NAME} 
-
-	echo "Following jobrun logs" 
 
 	echo "run : ibmcloud ce jobrun logs -n $$(ibmcloud ce jobrun list -s age --job ${JOB_NAME} --output json | jq -r '.items[0].metadata.name') to track progress." 
 
