@@ -53,8 +53,8 @@ def getWorkspaceStatus():
     return status
 
 def deleteWorkspaceResources():
-    client = schematicsClient()
     log = logDnaLogger()
+    client = schematicsClient()
     wsDestroy = client.destroy_workspace_command(
     w_id=workspaceId,
     refresh_token=refreshToken
@@ -62,7 +62,7 @@ def deleteWorkspaceResources():
     
     destroyActivityId = wsDestroy.get('activityid')
     # Next step is to check the status of the workspace vs the status of the job that is running the destroy command
-    # status = getWorkspaceStatus()
+
     # Need to verify the status names that get returned from the API. I believe these all use UPPERCASE
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
@@ -124,11 +124,23 @@ try:
     log = logDnaLogger()
     deployTimestamp = datetime.now().strftime("%Y-%m-%d:%H:%M:%S")
     log.debug("Starting Code Engine job at " + deployTimestamp)
-    currentStatus = getWorkspaceStatus()
-    log.debug("Current workspace status: " + currentStatus)
-    deleteWorkspaceResources()
-    planWorkspace()
-    applyWorkspace()
+    workspaceStatus = getWorkspaceStatus()
+    if (workspaceStatus == 'ACTIVE'): 
+        log.info("Workspace is active. Starting destroy.")
+        deleteWorkspaceResources()
+        planWorkspace()
+        applyWorkspace()
+    elif (workspaceStatus == 'INACTIVE'):
+        log.info("Workspace is inactive. Starting plan.")
+        planWorkspace()
+        applyWorkspace()
+    else:
+        log.error("Workspace is in an unknown state. Please check the workspace status and try again.")
+    # currentStatus = getWorkspaceStatus()
+    # log.debug("Current workspace status: " + currentStatus)
+    # deleteWorkspaceResources()
+    # planWorkspace()
+    # applyWorkspace()
 except ApiException as ae:
     log.error("Workspace operation failed.")
     log.error(" - status code: " + str(ae.code))
