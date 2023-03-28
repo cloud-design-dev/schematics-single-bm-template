@@ -89,10 +89,10 @@ def planWorkspace():
     while True:
         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
         if (planStatus == 'job_in_progress' or planStatus == 'job_pending'):
-            log.info("Workspace apply in progress. Checking again in 2 minutes...")
+            log.info("Workspace Plan in progress. Checking again in 2 minutes...")
             time.sleep(120)
         elif (planStatus == 'job_cancelled' or planStatus == 'job_failed'):
-            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
+            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
             break
         else:
             log.info("Workspace Plan complete. Starting workspace apply.")
