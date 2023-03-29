@@ -7,7 +7,8 @@ from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
 from datetime import datetime
 from ibm_platform_services import GlobalTaggingV1
-
+import SoftLayer
+from SoftLayer import HardwareManager, Client
 
 
 
@@ -40,12 +41,19 @@ def logDnaLogger():
 
     return log
 
-def tagClient():
-    client = GlobalTaggingV1(authenticator=authenticator)
-    apiEndpoint = 'https://tags.global-search-tagging.cloud.ibm.com'
-    client.set_service_url(apiEndpoint)
+def slClient():
+    client = SoftLayer.create_client_from_env(
+        username=os.environ.get('IAAS_CLASSIC_USERNAME'),
+        api_key=os.environ.get('IAAS_CLASSIC_API_KEY')
+    )
     return client
 
+def attachTag():
+    client = slClient()
+    hardwareManager = HardwareManager(client)
+    instanceId = getDeployedServerId()
+    hardwareManager.edit(hardware_id=instanceId, userdata=None, hostname=None, domain=None, notes=None, tags='reclaim_immediately')
+    
 def schematicsClient():
     client = SchematicsV1(authenticator=authenticator)
     schematicsURL = 'https://private-us-east.schematics.cloud.ibm.com'
@@ -61,23 +69,9 @@ def getDeployedServerId():
     deployedServerId = wsOutputs[0]['output_values'][0]['instance_id']['value']
     return str(deployedServerId)
 
-## Call service to add tag to server instance
+# ## Call service to add tag to server instance
 
-def attachTag():
-    client = tagClient()
-    instanceId = getDeployedServerId()
-    resource_model = {'resource_id': instanceId}
-
-    tag_results = client.attach_tag(
-        resources=[resource_model],
-        tag_names=['reclaim_immediately'],
-        tag_type='user'
-        ).get_result()
-
-    print(tag_results)
-
-## Call workspace destroy to see if updated tag remains on system or if tags are dropped
-
+# edit(hardware_id=instanceId, userdata=None, hostname=None, domain=None, notes=None, tags='reclaim_immediately')
 
 
 # def getWorkspaceStatus():
