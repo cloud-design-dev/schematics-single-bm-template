@@ -42,7 +42,7 @@ def logDnaLogger():
 
 def tagClient():
     client = GlobalTaggingV1(authenticator=authenticator)
-    apiEndpoint = 'https://tags.private.global-search-tagging.cloud.ibm.com'
+    apiEndpoint = 'https://tags.global-search-tagging.cloud.ibm.com'
     client.set_service_url(apiEndpoint)
     return client
 
