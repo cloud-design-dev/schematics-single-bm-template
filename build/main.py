@@ -6,6 +6,10 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
 from datetime import datetime
+from ibm_platform_services import GlobalTaggingV1
+
+
+
 
 # Set up IAM authenticator and pull refresh token
 authenticator = IAMAuthenticator(
@@ -24,9 +28,8 @@ def logDnaLogger():
     log.setLevel(logging.INFO)
 
     options = {
-        'env': 'code-engine',
         'index_meta': True,
-        'tags': str(workspaceId + '-ce-job'),
+        'tags': 'tag-update-logic',
         'url': 'https://logs.private.us-south.logging.cloud.ibm.com/logs/ingest',
         'log_error_response': True
     }
@@ -37,27 +40,61 @@ def logDnaLogger():
 
     return log
 
-def schematicsClient():
-    schClient = SchematicsV1(authenticator=authenticator)
-    schematicsURL = 'https://private-us-east.schematics.cloud.ibm.com'
-    schClient.set_service_url(schematicsURL)
-    return schClient
+def tagClient():
+    client = GlobalTaggingV1(authenticator=authenticator)
+    apiEndpoint = 'https://tags.private.global-search-tagging.cloud.ibm.com'
+    client.set_service_url(apiEndpoint)
+    return client
 
-def getWorkspaceStatus():
+def schematicsClient():
+    client = SchematicsV1(authenticator=authenticator)
+    schematicsURL = 'https://private-us-east.schematics.cloud.ibm.com'
+    client.set_service_url(schematicsURL)
+    return client
+
+def getDeployedServerId():
     client = schematicsClient()
-    wsStatus = client.get_workspace(
+    wsOutputs = client.get_workspace_outputs(
         w_id=workspaceId,
     ).get_result()
 
-    status = wsStatus['status']
-    return status
+    deployedServerId = wsOutputs[0]['output_values'][0]['instance_id']['value']
+    return str(deployedServerId)
+
+## Call service to add tag to server instance
+
+def attachTag():
+    client = tagClient()
+    instanceId = getDeployedServerId()
+    resource_model = {'resource_id': instanceId}
+
+    tag_results = client.attach_tag(
+        resources=[resource_model],
+        tag_names=['reclaim_immediately'],
+        tag_type='user'
+        ).get_result()
+
+    print(tag_results)
+
+## Call workspace destroy to see if updated tag remains on system or if tags are dropped
+
+
+
+# def getWorkspaceStatus():
+#     client = schematicsClient()
+#     wsStatus = client.get_workspace(
+#         w_id=workspaceId,
+#     ).get_result()
+
+#     status = wsStatus['status']
+#     return status
 
 def deleteWorkspaceResources():
     log = logDnaLogger()
     client = schematicsClient()
     wsDestroy = client.destroy_workspace_command(
-    w_id=workspaceId,
-    refresh_token=refreshToken
+        w_id=workspaceId,
+        refresh_token=refreshToken
     ).get_result()
     
     destroyActivityId = wsDestroy.get('activityid')
@@ -76,69 +113,60 @@ def deleteWorkspaceResources():
             log.info("Workspace resources successfully destroyed. Starting workspace plan.")
             break
 
-def planWorkspace():
-    client = schematicsClient()
-    log = logDnaLogger()
-    wsPlan = client.plan_workspace_command(
-        w_id=workspaceId,
-        refresh_token=refreshToken
-    ).get_result()
+# def planWorkspace():
+#     client = schematicsClient()
+#     log = logDnaLogger()
+#     wsPlan = client.plan_workspace_command(
+#         w_id=workspaceId,
+#         refresh_token=refreshToken
+#     ).get_result()
 
-    planActivityId = wsPlan.get('activityid')
+#     planActivityId = wsPlan.get('activityid')
 
-    while True:
-        planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
-        if (planStatus == 'job_in_progress' or planStatus == 'job_pending'):
-            log.info("Workspace Plan in progress. Checking again in 2 minutes...")
-            time.sleep(120)
-        elif (planStatus == 'job_cancelled' or planStatus == 'job_failed'):
-            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
-            break
-        else:
-            log.info("Workspace Plan complete. Starting workspace apply.")
-            break
+#     while True:
+#         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
+#         if (planStatus == 'job_in_progress' or planStatus == 'job_pending'):
+#             log.info("Workspace Plan in progress. Checking again in 2 minutes...")
+#             time.sleep(120)
+#         elif (planStatus == 'job_cancelled' or planStatus == 'job_failed'):
+#             log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
+#             break
+#         else:
+#             log.info("Workspace Plan complete. Starting workspace apply.")
+#             break
 
-def applyWorkspace():
-    client = schematicsClient()
-    log = logDnaLogger()
-    wsApply = client.apply_workspace_command(
-        w_id=workspaceId,
-        refresh_token=refreshToken,
-    ).get_result()
+# def applyWorkspace():
+#     client = schematicsClient()
+#     log = logDnaLogger()
+#     wsApply = client.apply_workspace_command(
+#         w_id=workspaceId,
+#         refresh_token=refreshToken,
+#     ).get_result()
 
-    applyActivityId = wsApply.get('activityid')
+#     applyActivityId = wsApply.get('activityid')
 
-    while True:
-        applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
-        if (applyStatus == 'job_in_progress' or applyStatus == 'job_pending'):
-            log.info("Workspace apply in progress. Checking again in 10 minutes...")
-            time.sleep(600)
-        elif (applyStatus == 'job_cancelled' or applyStatus == 'job_failed'):
-            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
-            break
-        else:
-            log.info("Workspace apply complete. Visit the following URL to see the deployed resources: https://cloud.ibm.com/schematics/workspaces/" + workspaceId + "/resources?region=us")
-            break
+#     while True:
+#         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
+#         if (applyStatus == 'job_in_progress' or applyStatus == 'job_pending'):
+#             log.info("Workspace apply in progress. Checking again in 10 minutes...")
+#             time.sleep(600)
+#         elif (applyStatus == 'job_cancelled' or applyStatus == 'job_failed'):
+#             log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
+#             break
+#         else:
+#             log.info("Workspace apply complete. Visit the following URL to see the deployed resources: https://cloud.ibm.com/schematics/workspaces/" + workspaceId + "/resources?region=us")
+#             break
 
 try:
     log = logDnaLogger()
-    deployTimestamp = datetime.now().strftime("%Y-%m-%d:%H:%M:%S")
-    log.debug("Starting Code Engine job at " + deployTimestamp)
-    workspaceStatus = getWorkspaceStatus()
-    if (workspaceStatus == 'ACTIVE'): 
-        log.info("Workspace is active. Starting destroy.")
-        deleteWorkspaceResources()
-        log.info("Workspace resource destroy completed. Starting plan.")
-        planWorkspace()
-        log.info("Workspace plan completed. Starting apply.")
-        applyWorkspace()
-        log.info("Workspace apply completed.")
-    else:
-        log.info("Workspace is inactive. Starting plan.")
-        planWorkspace()
-        log.info("Workspace plan completed. Starting apply.")
-        applyWorkspace()
-        log.info("Workspace apply completed.")
+    log.info(" - Starting workspace update logic for Workspace ID: " + workspaceId)
+    deployedServerId = getDeployedServerId()
+    log.info(" - Deployed server ID: " + str(deployedServerId))
+    log.info(" - Attaching 'reclaim_immediately' tag to server instance.")
+    attachTag()
+    log.info(" - Destroying workspace resources to see if updated tags remain.")
+    deleteWorkspaceResources()
+    log.info(" - Workspace update logic complete.")
 
 except ApiException as ae:
     log.error("Workspace operation failed.")

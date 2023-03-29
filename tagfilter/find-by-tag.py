@@ -1,8 +1,8 @@
 import os
 import json
 import sys
-# import SoftLayer
-# from SoftLayer import TicketManager, Client
+import SoftLayer
+from SoftLayer import TicketManager, Client
 from ibm_platform_services import ResourceManagerV2, GlobalSearchV2, GlobalTaggingV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
@@ -39,24 +39,42 @@ def getServiceInstances():
         fields=["*"]
     ).get_result()
     resources = result['items']
-##    print(str(len(resources)) + " bare metal instances match your search:")
-    for resource in resources:
-        print(resource['doc']['id'])
 
-# def slCient():
-#     client = SoftLayer.create_client_from_env(
-#         username=os.environ.get('IAAS_CLASSIC_USERNAME'),
-#         api_key=os.environ.get('IAAS_CLASSIC_API_KEY')
-#     )
-#     return client
+    return list(resources)
+# ##    print(str(len(resources)) + " bare metal instances match your search:")
+#     for resource in resources:
+#         print(resource['doc']['id'])
 
-# def getOpenCancelTicket(hardwareId):
-#     client = slCient()
-#     getOpenTicket = client['Hardware_Server'].getOpenCancellationTicket(id=hardwareId)
-#     ticketId = getOpenTicket['id']
-#     return ticketId
+def slClient():
+    client = SoftLayer.create_client_from_env(
+        username=os.environ.get('IAAS_CLASSIC_USERNAME'),
+        api_key=os.environ.get('IAAS_CLASSIC_API_KEY')
+    )
+    return client
+
+## failing if the instance does not have an open cancellation ticket. In this case we have 1 machine that does not have an open cancellation ## ticket
+
+def getOpenCancelTicket(instanceId):
+    client = slClient()
+    listinstances = getServiceInstances()
+    for instance in listinstances:
+        instanceId = instance['doc']['id']
+        getOpenTicket = client['Hardware_Server'].getOpenCancellationTicket(id=instanceId)
+        ticketId = getOpenTicket['id']
+    
+    print(ticketId)
+
 
 try:
-    getServiceInstances()
+    listinstances = getServiceInstances()
+    for instance in listinstances:
+        instanceId = instance['doc']['id']
+        getOpenCancelTicket(instanceId)
+
+
+    # getOpenCancelTicket()
+    # listInstances = getServiceInstances()
+    # for instance in listInstances:
+    #     print(instance['doc']['id'])
 except ApiException as ex:
     print("Method failed with status code " + str(ex.code) + ": " + ex.message)
