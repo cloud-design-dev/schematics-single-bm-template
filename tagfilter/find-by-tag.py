@@ -33,7 +33,7 @@ def classicIaasTags():
 
 def getServiceInstances():
     client = searchService()
-    tagQuery = '(family:ims) AND (tags:"project:rolling-iaas")'
+    tagQuery = '(family:ims) AND (tags:"reclaim_immediately")'
     result = client.search(
         query=tagQuery,
         fields=["*"]
@@ -41,9 +41,6 @@ def getServiceInstances():
     resources = result['items']
 
     return list(resources)
-# ##    print(str(len(resources)) + " bare metal instances match your search:")
-#     for resource in resources:
-#         print(resource['doc']['id'])
 
 def slClient():
     client = SoftLayer.create_client_from_env(
@@ -54,27 +51,21 @@ def slClient():
 
 ## failing if the instance does not have an open cancellation ticket. In this case we have 1 machine that does not have an open cancellation ## ticket
 
-def getOpenCancelTicket(instanceId):
+def getInstanceIds():
     client = slClient()
-    listinstances = getServiceInstances()
-    for instance in listinstances:
-        instanceId = instance['doc']['id']
-        getOpenTicket = client['Hardware_Server'].getOpenCancellationTicket(id=instanceId)
-        ticketId = getOpenTicket['id']
-    
-    print(ticketId)
+    svcs = getServiceInstances()
+    for svc in svcs:
+        openTicketId = getOpenTicket(instanceId=svc['doc']['id'])
+        getTicketUpdates = client['Ticket'].getUpdates(id=openTicketId)
+        print(getTicketUpdates)
 
+def getOpenTicket(instanceId):
+    client = slClient()
+    openTicketId = client['Hardware_Server'].getOpenCancellationTicket(id=instanceId)
+    ticketId = openTicketId['id']
+    return str(ticketId) if ticketId else 'null'
 
 try:
-    listinstances = getServiceInstances()
-    for instance in listinstances:
-        instanceId = instance['doc']['id']
-        getOpenCancelTicket(instanceId)
-
-
-    # getOpenCancelTicket()
-    # listInstances = getServiceInstances()
-    # for instance in listInstances:
-    #     print(instance['doc']['id'])
+    getInstanceIds()
 except ApiException as ex:
     print("Method failed with status code " + str(ex.code) + ": " + ex.message)
