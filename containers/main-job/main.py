@@ -6,6 +6,11 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_schematics.schematics_v1 import SchematicsV1
 from datetime import datetime
+from ibm_platform_services import GlobalTaggingV1
+import SoftLayer
+from SoftLayer import HardwareManager, Client
+
+
 
 # Set up IAM authenticator and pull refresh token
 authenticator = IAMAuthenticator(
@@ -24,9 +29,8 @@ def logDnaLogger():
     log.setLevel(logging.INFO)
 
     options = {
-        'env': 'code-engine',
         'index_meta': True,
-        'tags': str(workspaceId + '-ce-job'),
+        'tags': 'tag-update-logic',
         'url': 'https://logs.private.us-south.logging.cloud.ibm.com/logs/ingest',
         'log_error_response': True
     }
@@ -37,27 +41,49 @@ def logDnaLogger():
 
     return log
 
-def schematicsClient():
-    schClient = SchematicsV1(authenticator=authenticator)
-    schematicsURL = 'https://private-us-east.schematics.cloud.ibm.com'
-    schClient.set_service_url(schematicsURL)
-    return schClient
+def slClient():
+    client = SoftLayer.create_client_from_env(
+        username=os.environ.get('IAAS_CLASSIC_USERNAME'),
+        api_key=os.environ.get('IAAS_CLASSIC_API_KEY')
+    )
+    return client
 
-def getWorkspaceStatus():
+def attachTag():
+    client = slClient()
+    hardwareManager = HardwareManager(client)
+    instanceId = getDeployedServerId()
+    hardwareManager.edit(hardware_id=instanceId, userdata=None, hostname=None, domain=None, notes=None, tags='reclaim_immediately')
+    
+def schematicsClient():
+    client = SchematicsV1(authenticator=authenticator)
+    schematicsURL = 'https://us.schematics.cloud.ibm.com'
+    client.set_service_url(schematicsURL)
+    return client
+
+def getDeployedServerId():
     client = schematicsClient()
-    wsStatus = client.get_workspace(
+    wsOutputs = client.get_workspace_outputs(
         w_id=workspaceId,
     ).get_result()
 
-    status = wsStatus['status']
-    return status
+    deployedServerId = wsOutputs[0]['output_values'][0]['instance_id']['value']
+    return str(deployedServerId)
+
+# def getWorkspaceStatus():
+#     client = schematicsClient()
+#     wsStatus = client.get_workspace(
+#         w_id=workspaceId,
+#     ).get_result()
+
+#     status = wsStatus['status']
+#     return status
 
 def deleteWorkspaceResources():
     log = logDnaLogger()
     client = schematicsClient()
     wsDestroy = client.destroy_workspace_command(
-    w_id=workspaceId,
-    refresh_token=refreshToken
+        w_id=workspaceId,
+        refresh_token=refreshToken
     ).get_result()
     
     destroyActivityId = wsDestroy.get('activityid')
@@ -122,23 +148,17 @@ def applyWorkspace():
 
 try:
     log = logDnaLogger()
-    deployTimestamp = datetime.now().strftime("%Y-%m-%d:%H:%M:%S")
-    log.debug("Starting Code Engine job at " + deployTimestamp)
-    workspaceStatus = getWorkspaceStatus()
-    if (workspaceStatus == 'ACTIVE'): 
-        log.info("Workspace is active. Starting destroy.")
-        deleteWorkspaceResources()
-        log.info("Workspace resource destroy completed. Starting plan.")
-        planWorkspace()
-        log.info("Workspace plan completed. Starting apply.")
-        applyWorkspace()
-        log.info("Workspace apply completed.")
-    else:
-        log.info("Workspace is inactive. Starting plan.")
-        planWorkspace()
-        log.info("Workspace plan completed. Starting apply.")
-        applyWorkspace()
-        log.info("Workspace apply completed.")
+    log.info(" - Starting refresh for Workspace ID: " + workspaceId)
+    deployedServerId = getDeployedServerId()
+    log.info(" - Attaching 'reclaim_immediately' tag to server instance: " + str(deployedServerId))
+    attachTag()
+    log.info(" - Starting workspace destroy.")
+    deleteWorkspaceResources()
+    log.info(" - Starting workspace plan.")
+    planWorkspace()
+    log.info(" - Starting workspace apply.")
+    applyWorkspace()
+    log.info(" - Workspace refresh complete.")
 
 except ApiException as ae:
     log.error("Workspace operation failed.")
