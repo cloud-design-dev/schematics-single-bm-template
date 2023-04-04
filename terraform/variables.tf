@@ -15,7 +15,7 @@ variable "deployment" {
       datacenter          = "dal10"
       public_vlan_number  = 2998166
       private_vlan_number = 2998168
-      user_metadata       = null
+      user_metadata       = "user-data/windows.yml"
     },
     centos = {
       os_reference_code   = "OS_CENTOS_STREAM_8_X_64_BIT"

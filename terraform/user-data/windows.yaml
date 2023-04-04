@@ -1,0 +1,3 @@
+#ps1_sysnative
+Set-NetFirewallProfile -All -Enabled True
+New-NetFirewallRule -DisplayName 'RDPTCP-Inbound' -Profile @('Domain', 'Public') -Direction Inbound -Action Block -Protocol TCP -LocalPort 3389

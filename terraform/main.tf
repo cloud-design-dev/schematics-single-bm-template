@@ -21,7 +21,7 @@ resource "ibm_compute_bare_metal" "rolling" {
   public_bandwidth       = 20000
   disk_key_names         = ["HARD_DRIVE_1_00_TB_SATA_2", "HARD_DRIVE_1_00_TB_SATA_2"]
   hourly_billing         = false
-  private_network_only   = false
+  private_network_only   = false 
   unbonded_network       = true
   public_vlan_id         = var.deployment["${var.os}"]["public_vlan_number"]
   private_vlan_id        = var.deployment["${var.os}"]["private_vlan_number"]
@@ -38,9 +38,3 @@ resource "ibm_compute_bare_metal" "rolling" {
 
   }
 }
-
-#   user_metadata = templatefile("${path.module}/centos.tftpl", {
-#     logdna_ingestion_key     = "${data.ibm_secrets_manager_secret.logdna_ingestion_key.secret_data.payload}",
-#     monitoring_ingestion_key = "${data.ibm_secrets_manager_secret.monitoring_ingestion_key.secret_data.payload}",
-#     region                   = "us-south"
-#   })
