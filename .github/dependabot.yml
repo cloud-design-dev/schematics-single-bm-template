@@ -5,11 +5,11 @@
 
 version: 2
 updates:
-  - package-ecosystem: 'python' 
+  - package-ecosystem: 'pip' 
     directory: 'containers/clean-up/'
     schedule:
       interval: 'daily'
-  - package-ecosystem: 'python'
+  - package-ecosystem: 'pip'
     directory: 'containers/main-job/'
     schedule:
       interval: 'daily'
