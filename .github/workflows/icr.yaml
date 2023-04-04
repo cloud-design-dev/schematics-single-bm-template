@@ -28,7 +28,7 @@ jobs:
         image: ${{ env.ICR_NAMESPACE  }}/${{ env.IMAGE_NAME }}
         tags: latest ${{ steps.date.outputs.date }}
         containerfiles: |
-          ./Dockerfile
+          ./containers/main-job/Dockerfile
     - name: Push To ICR
       id: push-to-icr
       uses: redhat-actions/push-to-registry@v2
