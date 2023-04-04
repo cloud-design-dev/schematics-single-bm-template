@@ -1,0 +1,42 @@
+name: Cleanup Image Build and Push
+
+on:
+  push:
+    branches: [ "main" ]
+    # When tested that it works, put restrictions on the paths
+    paths: ['containers/clean-up/**']
+
+env:
+  IMAGE_NAME: sch-bm-cleanup
+  REGISTRY_URL: us.icr.io
+  ICR_NAMESPACE: rolling-iaas
+  ICR_TOKEN: ${{secrets.ICR_TOKEN}}
+  GITHUB_SHA: ${{ github.sha }}
+
+jobs:
+  build-and-push-cleanup-job-image:
+    name: Build and push job
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build cleanup code engine container image
+      id: build-cleanup-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ env.ICR_NAMESPACE  }}/${{ env.IMAGE_NAME }}
+        tags: latest ${{ env.GITHUB_SHA }}
+        context: ./containers/main-job
+        containerfiles: |
+          ./containers/clean-up/Dockerfile
+    - name: Push cleanup image to ICR
+      id: push-cleanup-image
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-cleanup-image.outputs.image }}
+        tags: ${{ steps.build-cleanup-image.outputs.tags }}
+        username: iamapikey
+        password: ${{ env.ICR_TOKEN }}
+        registry: ${{ env.REGISTRY_URL }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-cleanup-image.outputs.registry-paths }}"

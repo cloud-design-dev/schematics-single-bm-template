@@ -1,0 +1,42 @@
+name: Main Image Build and Push
+
+on:
+  push:
+    branches: [ "main" ]
+    # When tested that it works, put restrictions on the paths
+    paths: ['containers/main-job/**']
+
+env:
+  IMAGE_NAME: sch-bm-deploy
+  REGISTRY_URL: us.icr.io
+  ICR_NAMESPACE: rolling-iaas
+  ICR_TOKEN: ${{secrets.ICR_TOKEN}}
+  GITHUB_SHA: ${{ github.sha }}
+
+jobs:
+  build-and-push-main-job-image:
+    name: Build and push job
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build main code engine container image
+      id: build-main-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ env.ICR_NAMESPACE  }}/${{ env.IMAGE_NAME }}
+        tags: latest ${{ env.GITHUB_SHA }}
+        context: ./containers/main-job
+        containerfiles: |
+          ./containers/main-job/Dockerfile
+    - name: Push main code engine image to ICR
+      id: push-main-image
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-main-image.outputs.image }}
+        tags: ${{ steps.build-main-image.outputs.tags }}
+        username: iamapikey
+        password: ${{ env.ICR_TOKEN }}
+        registry: ${{ env.REGISTRY_URL }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-main-image.outputs.registry-paths }}"
