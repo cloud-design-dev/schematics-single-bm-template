@@ -17,11 +17,6 @@ jobs:
   build-and-push-main-job-image:
     name: Build main job image
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./containers/main-job
-
     steps:
     - uses: actions/checkout@v3
     - name: Get current date
@@ -38,7 +33,7 @@ jobs:
         tags: latest ${{ steps.date.outputs.date }}
         context: ./containers/main-job
         containerfiles: |
-          ./Dockerfile
+          ./containers/main-job/Dockerfile
   #   - name: Push To ICR
   #     id: push-to-icr
   #     uses: redhat-actions/push-to-registry@v2
