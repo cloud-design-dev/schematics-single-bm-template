@@ -30,15 +30,14 @@ jobs:
     - name: list current directory contents
       id: list
       run: pwd && ls -la 
-  #   - name: Build container image
-  #     id: build-image
-  #     uses: redhat-actions/buildah-build@v2
-  #     with:
-  #       image: ${{ env.ICR_NAMESPACE  }}/${{ env.MAIN_IMAGE_NAME }}
-  #       tags: latest ${{ steps.date.outputs.date }}
-  #       context: .
-  #       containerfiles: |
-  #         ./Dockerfile
+    - name: Build container image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ env.ICR_NAMESPACE  }}/${{ env.MAIN_IMAGE_NAME }}
+        tags: latest ${{ steps.date.outputs.date }}
+        containerfiles: |
+          ./Dockerfile
   #   - name: Push To ICR
   #     id: push-to-icr
   #     uses: redhat-actions/push-to-registry@v2
