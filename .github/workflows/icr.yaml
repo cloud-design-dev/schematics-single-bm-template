@@ -33,6 +33,7 @@ jobs:
       with:
         image: ${{ env.ICR_NAMESPACE  }}/${{ env.MAIN_IMAGE_NAME }}
         tags: latest ${{ steps.date.outputs.date }}
+        context: .
         containerfiles: |
           ./Dockerfile
     - name: Push To ICR
