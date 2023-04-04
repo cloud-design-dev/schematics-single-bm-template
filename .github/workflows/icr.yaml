@@ -26,9 +26,10 @@ jobs:
       uses: redhat-actions/buildah-build@v2
       with:
         image: ${{ env.ICR_NAMESPACE  }}/${{ env.IMAGE_NAME }}
+        context: ./containers/main-job
         tags: latest ${{ steps.date.outputs.date }}
         containerfiles: |
-          ./containers/main-job/Dockerfile
+          ./Dockerfile
     - name: Push To ICR
       id: push-to-icr
       uses: redhat-actions/push-to-registry@v2
