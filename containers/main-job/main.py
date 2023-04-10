@@ -30,8 +30,8 @@ def logDnaLogger():
 
     options = {
         'index_meta': True,
-        'tags': 'tag-update-logic',
-        'url': 'https://logs.private.us-south.logging.cloud.ibm.com/logs/ingest',
+        'tags': 'rolling-iaas-main-job',
+        'url': 'https://logs.us-south.logging.cloud.ibm.com/logs/ingest',
         'log_error_response': True
     }
 
@@ -43,8 +43,8 @@ def logDnaLogger():
 
 def slClient():
     client = SoftLayer.create_client_from_env(
-        username=os.environ.get('IAAS_CLASSIC_USERNAME'),
-        api_key=os.environ.get('IAAS_CLASSIC_API_KEY')
+        username='apikey',
+        api_key=os.environ.get('IBMCLOUD_API_KEY')
     )
     return client
 
