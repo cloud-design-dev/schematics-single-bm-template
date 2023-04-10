@@ -62,10 +62,7 @@ def schematicsClient():
 
 def getDeployedServerId():
     client = schematicsClient()
-    wsOutputs = client.get_workspace_outputs(
-        w_id=workspaceId,
-    ).get_result()
-
+    wsOutputs = client.get_workspace_outputs(w_id=workspaceId).get_result()
     deployedServerId = wsOutputs[0]['output_values'][0]['instance_id']['value']
     return str(deployedServerId)
 
