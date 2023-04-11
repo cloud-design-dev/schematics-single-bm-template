@@ -79,14 +79,17 @@ def deleteWorkspaceResources():
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if destroyStatus == 'job_finished':
-            log.info("Workspace resources successfully destroyed. Starting workspace plan.")
+            log.info("Workspace resources successfully destroyed.")
             break
-        elif (destroyStatus == 'job_cancelled' or destroyStatus == 'job_failed'):
-            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
-            break
-        else:
+        elif destroyStatus in ['job_in_progress', 'job_pending']:
             log.info("Workspace destroy in progress. Checking again in 2 minutes...")
             time.sleep(120)
+        elif destroyStatus in ['job_failed', 'job_cancelled']:
+            log.error("Workspace destroy failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
+            break
+        else:
+            log.error("Unknown status code received from Schematics API: " + destroyStatus)
+            break
 
 def planWorkspace():
     client = schematicsClient()
@@ -101,14 +104,20 @@ def planWorkspace():
     while True:
         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
         if planStatus == 'job_finished':
-            log.info("Workspace plan successfully generated. Moving on to workspace apply.")
+            log.info("Workspace plan complete.")
             break
-        elif (planStatus == 'job_cancelled' or planStatus == 'job_failed'):
-            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
-            break
-        else:
+        elif planStatus in ['job_in_progress', 'job_pending']:
             log.info("Workspace plan in progress. Checking again in 2 minutes...")
             time.sleep(120)
+        elif planStatus == 'job_failed':
+            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
+            break
+        elif planStatus == 'job_cancelled':
+            log.error("Workspace plan was cancelled. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
+            break
+        else:
+            log.error("Unknown status code received from Schematics API: " + planActivityId)
+            break
 
 def applyWorkspace():
     client = schematicsClient()
@@ -123,14 +132,20 @@ def applyWorkspace():
     while True:
         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if applyStatus == 'job_finished':
-            log.info("Workspace apply complete. Visit the following URL to see the deployed resources: https://cloud.ibm.com/schematics/workspaces/" + workspaceId + "/resources?region=us")
+            log.info("Workspace plan complete.")
             break
-        elif (applyStatus == 'job_cancelled' or applyStatus == 'job_failed'):
+        elif applyStatus in ['job_in_progress', 'job_pending']:
+            log.info("Workspace plan in progress. Checking again in 2 minutes...")
+            time.sleep(120)
+        elif applyStatus == 'job_failed':
             log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
             break
+        elif applyStatus == 'job_cancelled':
+            log.error("Workspace plan was cancelled. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
+            break
         else:
-            log.info("Workspace apply in progress. Checking again in 10 minutes...")
-            time.sleep(600)
+            log.error("Unknown status code received from Schematics API: " + applyActivityId)
+            break
 
 try:
     log = logDnaLogger()
