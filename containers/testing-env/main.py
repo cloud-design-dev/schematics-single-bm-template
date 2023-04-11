@@ -57,13 +57,13 @@ def getWorkspaces():
     client = schematicsClient()
     workspaces = client.list_workspaces().get_result()
     for workspace in workspaces:
-        log.info(workspace['id'])
+        print(workspace)
 
 def getVirtualGuests():
     client = slClient()
     virtualGuests = client['Account'].getVirtualGuests()
     for virtualGuest in virtualGuests:
-        log.info(virtualGuest['id'])
+        print(virtualGuest)
 
 try:
     log = logDnaLogger()
