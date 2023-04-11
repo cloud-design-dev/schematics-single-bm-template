@@ -42,7 +42,8 @@ def logDnaLogger():
 def slClient():
     client = SoftLayer.create_client_from_env(
         username='apikey',
-        api_key=os.environ.get('IBMCLOUD_API_KEY')
+        api_key=os.environ.get('IBMCLOUD_API_KEY'),
+        endpoint_url='https://api.service.softlayer.com/rest/v3.1/'
     )
     return client
 
