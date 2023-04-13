@@ -138,10 +138,10 @@ def applyWorkspace():
             log.info("Workspace plan complete.")
             break
         elif applyStatus in ['job_in_progress', 'job_pending']:
-            log.info("Workspace plan in progress. Checking again in 2 minutes...")
-            time.sleep(120)
+            log.info("Workspace apply in progress. Checking again in 10 minutes...")
+            time.sleep(600)
         elif applyStatus in ['job_failed', 'job_cancelled']:
-            log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
+            log.error("Workspace apply failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
             break
         else:
             log.error("Unknown status code received from Schematics API: " + applyActivityId)
