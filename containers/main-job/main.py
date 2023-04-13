@@ -78,6 +78,7 @@ def deleteWorkspaceResources():
 
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
+        log.debug(destroyStatus)
         if destroyStatus == 'job_finished':
             log.debug("Workspace resources successfully destroyed.")
             break
