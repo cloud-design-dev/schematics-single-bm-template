@@ -50,28 +50,14 @@ def getServiceInstances():
     resources = result['items']
     
     instances_to_update = []
-# Check if the instance has an open cancellation ticket
-
+    for resource in resources:
         # Check if the instance has an open cancellation ticket
-    instance_id = resource['resource_id']
-    open_cancel_ticket_id = getOpenTicket(instance_id)
-    if open_cancel_ticket_id:
-        instances_to_update.append(resource)
-        open_cancel_ticket_id = getOpenTicket(instance_id)
-        if open_cancel_ticket_id:
-            instances_to_update.append(resource)
-
         instance_id = resource['resource_id']
-    instance_id = resource['resource_id']
-    open_ticket_id = getOpenTicket(instance_id)
-    if open_ticket_id is not None:
-        instances_to_update.append(resource)
+        open_ticket_id = getOpenTicket(instance_id)
         if open_ticket_id is not None:
             instances_to_update.append(resource)
     
     return instances_to_update
-
-
 
 
 ## failing if the instance does not have an open cancellation ticket. In this case we have 1 machine that does not have an open cancellation ## ticket
@@ -85,41 +71,14 @@ def getInstanceIds():
         print(getTicketUpdates)
 
 # def getOpenTicket(instanceId):
-
-
-    return None
-
-
+#     client = slClient()
 #     openTicketId = client['Hardware_Server'].getOpenCancellationTicket(id=instanceId)
-def getOpenTicket(instanceId):
-
-    client = slClient()
-
 #     ticketId = openTicketId['id']
-    ticket = client['Billing_Item'].getOpenCancellationTickets(id=instanceId)
-
 #     return str(ticketId) if ticketId else print()
-    return ticket[0].get('id') if ticket else None
 
 def getOpenTicket(instanceId):
     client = slClient()
-    tickets = client['Billing_Item'].getActiveCancellationTickets(filter={
-        'hardwareId': {'operation': instanceId},
-        'status': {'operation': 'open'},
-        'title': {'operation': 'Cancellation Request'}
-    })
-    if tickets:
-        return tickets[0]['id']
-    else:
-        return None
-
-def getOpenTicket(instanceId):
-    client = slClient()
-tickets = client['Billing_Item'].getActiveCancellationTickets(filter={
-    'hardwareId': {'operation': instanceId},
-    'status': {'operation': 'open'},
-    'title': {'operation': 'Cancellation Request'}
-})
+    tickets = client['Hardware_Server'].getActiveTickets(filter={
         'hardwareId': {'operation': instanceId},
         'status': {'operation': 'open'},
         'title': {'operation': 'Cancellation Request'}

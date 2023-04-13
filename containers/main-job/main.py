@@ -79,10 +79,10 @@ def deleteWorkspaceResources():
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if destroyStatus == 'job_finished':
-            log.info("Workspace resources successfully destroyed.")
+            log.debug("Workspace resources successfully destroyed.")
             break
         elif destroyStatus in ['job_in_progress', 'job_pending']:
-            log.info("Workspace destroy in progress. Checking again in 2 minutes...")
+            log.debug("Workspace destroy in progress. Checking again in 2 minutes...")
             time.sleep(120)
         elif destroyStatus in ['job_failed', 'job_cancelled']:
             log.error("Workspace destroy failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + destroyActivityId)
@@ -104,16 +104,13 @@ def planWorkspace():
     while True:
         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
         if planStatus == 'job_finished':
-            log.info("Workspace plan complete.")
+            log.debug("Workspace plan complete.")
             break
         elif planStatus in ['job_in_progress', 'job_pending']:
-            log.info("Workspace plan in progress. Checking again in 2 minutes...")
+            log.debug("Workspace plan in progress. Checking again in 2 minutes...")
             time.sleep(120)
-        elif planStatus == 'job_failed':
+        elif planStatus in ['job_failed', 'job_cancelled']:
             log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
-            break
-        elif planStatus == 'job_cancelled':
-            log.error("Workspace plan was cancelled. Please check the logs by running the following command: ibmcloud schematics job logs --id " + planActivityId)
             break
         else:
             log.error("Unknown status code received from Schematics API: " + planActivityId)
@@ -132,16 +129,13 @@ def applyWorkspace():
     while True:
         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
         if applyStatus == 'job_finished':
-            log.info("Workspace plan complete.")
+            log.debug("Workspace plan complete.")
             break
         elif applyStatus in ['job_in_progress', 'job_pending']:
-            log.info("Workspace plan in progress. Checking again in 2 minutes...")
+            log.debug("Workspace plan in progress. Checking again in 2 minutes...")
             time.sleep(120)
-        elif applyStatus == 'job_failed':
+        elif applyStatus in ['job_failed', 'job_cancelled']:
             log.error("Workspace plan failed. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
-            break
-        elif applyStatus == 'job_cancelled':
-            log.error("Workspace plan was cancelled. Please check the logs by running the following command: ibmcloud schematics job logs --id " + applyActivityId)
             break
         else:
             log.error("Unknown status code received from Schematics API: " + applyActivityId)
@@ -149,17 +143,17 @@ def applyWorkspace():
 
 try:
     log = logDnaLogger()
-    log.info(":: Starting refresh for Workspace ID: " + workspaceId)
+    log.debug(":: Starting refresh for Workspace ID: " + workspaceId)
     deployedServerId = getDeployedServerId()
-    log.info(":: Attaching 'reclaim_immediately' tag to server instance: " + str(deployedServerId))
+    log.debug(":: Attaching 'reclaim_immediately' tag to server instance: " + str(deployedServerId))
     attachTag()
-    log.info(":: Starting workspace destroy.")
+    log.debug(":: Starting workspace destroy.")
     deleteWorkspaceResources()
-    log.info(":: Starting workspace plan.")
+    log.debug(":: Starting workspace plan.")
     planWorkspace()
-    log.info(":: Starting workspace apply.")
+    log.debug(":: Starting workspace apply.")
     applyWorkspace()
-    log.info(":: Workspace refresh complete.")
+    log.debug(":: Workspace refresh complete.")
 
 except ApiException as ae:
     log.error("Workspace operation failed.")
