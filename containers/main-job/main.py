@@ -80,8 +80,7 @@ def deleteWorkspaceResources():
 
     while True:
         destroyStatus = client.get_job(job_id=destroyActivityId).get_result()['status']['workspace_job_status']['status_code']
-        print("Current destroy status:", destroyStatus)
-        log.info(destroyStatus)
+        log.info("Current destroy status:", destroyStatus)
         if destroyStatus == 'job_finished':
             log.info("Workspace resources successfully destroyed.")
             break
@@ -107,7 +106,7 @@ def planWorkspace():
 
     while True:
         planStatus = client.get_job(job_id=planActivityId).get_result()['status']['workspace_job_status']['status_code']
-        print("Current plan status:", planStatus)
+        log.info("Current plan status:", planStatus)
         if planStatus == 'job_finished':
             log.info("Workspace plan complete.")
             break
@@ -133,7 +132,7 @@ def applyWorkspace():
 
     while True:
         applyStatus = client.get_job(job_id=applyActivityId).get_result()['status']['workspace_job_status']['status_code']
-        print("Current apply status:", applyStatus)
+        log.info("Current apply status:", applyStatus)
         if applyStatus == 'job_finished':
             log.info("Workspace plan complete.")
             break
