@@ -1,6 +1,6 @@
 certifi==2022.12.7
 charset-normalizer==3.1.0
-grpcio==1.53.0
+grpcio==1.54.0
 haikunator==2.1.0
 ibm-cloud-sdk-core==3.16.5
 ibm-platform-services==0.34.2
