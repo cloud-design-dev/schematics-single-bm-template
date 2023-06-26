@@ -23,6 +23,6 @@ mdurl==0.1.2
 prettytable==3.8.0
 prompt-toolkit==3.0.38
 Pygments==2.15.1
-SoftLayer==6.1.6
+SoftLayer==6.1.7
 urllib3==1.26.15
 wcwidth==0.2.6
