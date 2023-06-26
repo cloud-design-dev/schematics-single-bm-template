@@ -1,4 +1,4 @@
-ibm-cos-sdk==2.13.0
+ibm-cos-sdk==2.13.1
 ibm-cos-sdk-core==2.13.0
 ibm-cos-sdk-s3transfer==2.13.0
 certifi==2022.12.7
