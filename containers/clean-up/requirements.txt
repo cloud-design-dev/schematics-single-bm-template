@@ -10,7 +10,7 @@ ibm-schematics==2.0.0
 ibm-platform-services==0.37.0
 idna==3.4
 jmespath==1.0.1
-logdna==1.18.6
+logdna==1.18.11
 protobuf==4.23.3
 PyJWT==2.6.0
 python-dateutil==2.8.2
